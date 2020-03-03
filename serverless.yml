@@ -1,0 +1,53 @@
+org: jrhsls
+app: ampl-sls-example
+# serverless.yml
+
+service: ampl-sls-example-backend
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+  - aws-amplify-serverless-plugin
+
+custom:
+  stage: ${opt:stage, "dev"}
+  wsgi:
+    app: app.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: non-linux
+  amplify:
+      # this can be anything, as long as the frontend project includes it
+    - filename: src/aws-exports.js
+      type: javascript
+      # this is the Cognito user pool app client (from the resources section)
+      appClient: CognitoUserPoolClient
+
+package:
+  exclude:
+    - node_modules/**
+    - amplify/**
+    - public/**
+    - src/**
+    - yarn.lock
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${self:custom.stage}
+  region: us-west-2
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+         path: /test
+         method: any
+         cors: true
+         authorizer: aws_iam
+
+resources:
+  - ${file(resources/cognito-user-pool.yml)}
+  - ${file(resources/cognito-identity-pool.yml)}
+  - ${file(resources/api-gateway-errors.yml)}
