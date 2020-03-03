@@ -1,5 +1,3 @@
-org: jrhsls
-app: ampl-sls-example
 # serverless.yml
 
 service: ampl-sls-example-backend
